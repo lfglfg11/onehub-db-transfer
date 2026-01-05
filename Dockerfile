@@ -18,8 +18,9 @@ RUN go build -o /main .
 FROM alpine:latest
 
 # 设置环境变量
-ENV ONEAPI_OLD_SQL_DSN=""
-ENV ONEAPI_NEW_SQL_DSN=""
+ENV ONEAPI_SOURCE_SQL_DSN=""
+ENV ONEAPI_TARGET_SQL_DSN=""
+ENV ONEAPI_REBUILD_ABILITIES="true"
 
 # 从构建阶段复制二进制文件
 COPY --from=builder /main /main

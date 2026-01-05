@@ -1,6 +1,6 @@
 # OneAPI 数据库迁移工具
 
-这是一个`songquanpeng/one-api`数据迁移到`MartialBE/one-api`的工具。支持的数据库包括 MySQL、Postgres 和 SQLite。
+这是一个`MartialBE/one-hub`数据迁移到`songquanpeng/one-api`的工具。支持的数据库包括 MySQL、Postgres 和 SQLite。
 
 ## 功能
 
@@ -8,6 +8,7 @@
 - 支持的表包括：`abilities`、`channels`、`logs`、`options`、`redemptions`、`tokens`、`users`
 - 自动检测数据库驱动
 - 支持通过环境变量配置数据库连接
+- 可选：从目标库 `channels` 派生重建目标库 `abilities`（解决源库缺表/迁移后为空的问题）
 
 ## 使用方法
 
@@ -15,27 +16,32 @@
 
 首先，需要通过环境变量配置旧数据库和新数据库的连接字符串：
 
-- `ONEAPI_OLD_SQL_DSN`: songquanpeng/one-api数据库的连接字符串
-- `ONEAPI_NEW_SQL_DSN`: MartialBE/one-api数据库的连接字符串
+- `ONEAPI_SOURCE_SQL_DSN`: MartialBE/one-hub数据库的连接字符串(源)
+- `ONEAPI_TARGET_SQL_DSN`: songquanpeng/one-api数据库的连接字符串(目标)
+- `ONEAPI_REBUILD_ABILITIES`: 是否在迁移结束后重建目标库 `abilities`（默认开启；设置为 `false/0/no/off` 关闭）
 
 例如，对于 MySQL 数据库，可以设置以下环境变量：
 
 ```bash
-export ONEAPI_OLD_SQL_DSN="mysql://user:password@tcp(oldhost:3306)/olddb"
-export ONEAPI_NEW_SQL_DSN="mysql://user:password@tcp(newhost:3306)/newdb"
+export ONEAPI_SOURCE_SQL_DSN="mysql://user:password@tcp(oldhost:3306)/olddb"
+export ONEAPI_TARGET_SQL_DSN="mysql://user:password@tcp(newhost:3306)/newdb"
 ```
 例如，对于 PostgreSQL 数据库，可以设置以下环境变量：
 
 ```bash
-export ONEAPI_OLD_SQL_DSN="postgres://user:password@tcp(oldhost:3306)/olddb"
-export ONEAPI_NEW_SQL_DSN="postgres://user:password@tcp(newhost:3306)/newdb"
+export ONEAPI_SOURCE_SQL_DSN="postgres://user:password@oldhost:5432/olddb?sslmode=disable"
+export ONEAPI_TARGET_SQL_DSN="postgres://user:password@newhost:5432/newdb?sslmode=disable"
+
+# 或者使用 lib/pq 的 key-value 连接串（同样支持）：
+# export ONEAPI_SOURCE_SQL_DSN="host=oldhost port=5432 user=user password=password dbname=olddb sslmode=disable"
+# export ONEAPI_TARGET_SQL_DSN="host=newhost port=5432 user=user password=password dbname=newdb sslmode=disable"
 ```
 
 例如，对于 Sqlite 数据库，可以设置以下环境变量：
 
 ```bash
-export ONEAPI_OLD_SQL_DSN="旧数据库数据文件绝对地址"  // 比如 /olddb.sqlite3 视你项目具体实施情况而定
-export ONEAPI_NEW_SQL_DSN="新数据库数据文件绝对地址"  // 比如 /newdb.sqlite3 视你项目具体实施情况而定
+export ONEAPI_SOURCE_SQL_DSN="旧数据库数据文件绝对地址"  // 比如 /olddb.sqlite3 视你项目具体实施情况而定
+export ONEAPI_TARGET_SQL_DSN="新数据库数据文件绝对地址"  // 比如 /newdb.sqlite3 视你项目具体实施情况而定
 ```
 
 ### 使用 Docker
@@ -46,8 +52,8 @@ export ONEAPI_NEW_SQL_DSN="新数据库数据文件绝对地址"  // 比如 /new
 
 ```bash
 docker run --rm \
-  -e ONEAPI_OLD_SQL_DSN="mysql://user:password@tcp(oldhost:3306)/olddb" \
-  -e ONEAPI_NEW_SQL_DSN="mysql://user:password@tcp(newhost:3306)/newdb" \
+  -e ONEAPI_SOURCE_SQL_DSN="mysql://user:password@tcp(oldhost:3306)/olddb" \
+  -e ONEAPI_TARGET_SQL_DSN="mysql://user:password@tcp(newhost:3306)/newdb" \
   zerodeng/oneapi-dbtransfer:latest
 ```
 
@@ -66,8 +72,9 @@ services:
   dbtransfer:
     image: zerodeng/oneapi-dbtransfer:latest
     environment:
-      ONEAPI_OLD_SQL_DSN: "mysql://user:password@tcp(oldhost:3306)/olddb"
-      ONEAPI_NEW_SQL_DSN: "mysql://user:password@tcp(newhost:3306)/newdb"
+      ONEAPI_SOURCE_SQL_DSN: "mysql://user:password@tcp(oldhost:3306)/olddb"
+      ONEAPI_TARGET_SQL_DSN: "mysql://user:password@tcp(newhost:3306)/newdb"
+      ONEAPI_REBUILD_ABILITIES: "true"
 ```
 
 #### 启动服务
@@ -88,7 +95,7 @@ docker-compose down
 
 ### 使用二进制程序
 
-我们也提供了二进制程序，您可以从[发布页面](https://github.com/ZeroDeng01/one-api-db-transfer/releases)下载并运行。
+我们也提供了二进制程序，您可以从[发布页面](https://github.com/ZeroDeng01/onehub-db-transfer/releases)下载并运行。
 
 #### 下载二进制程序
 

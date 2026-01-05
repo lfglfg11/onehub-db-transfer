@@ -2,9 +2,11 @@ version: '3.8'
 
 services:
   dbtransfer:
-    image: zerodeng/oneapi-dbtransfer:latest
+    image: ghcr.io/lfglfg11/onehub-db-transfer:latest
     environment:
-      # songquanpeng/one-api数据库连接
-      ONEAPI_OLD_SQL_DSN: "mysql://user:password@tcp(oldhost:3306)/olddb"
-      # MartialBE/one-api数据库连接
-      ONEAPI_NEW_SQL_DSN: "mysql://user:password@tcp(newhost:3306)/newdb"
+      # MartialBE/one-hub数据库连接(源)
+      ONEAPI_SOURCE_SQL_DSN: "mysql://user:password@tcp(oldhost:3306)/olddb"
+      # songquanpeng/one-api数据库连接(目标)
+      ONEAPI_TARGET_SQL_DSN: "mysql://user:password@tcp(newhost:3306)/newdb"
+      # 迁移后是否从目标库 channels 重建 abilities（默认 true）
+      ONEAPI_REBUILD_ABILITIES: "true"

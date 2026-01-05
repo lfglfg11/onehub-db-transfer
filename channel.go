@@ -5,144 +5,145 @@ import (
 	"strconv"
 )
 
-// 新版通道类别
+// MartialBE/one-hub (Source) Channel Types
 const (
-	ChannelTypeUnknown        = 0
-	ChannelTypeOpenAI         = 1
-	ChannelTypeAPI2D          = 2
-	ChannelTypeAzure          = 3
-	ChannelTypeCloseAI        = 4
-	ChannelTypeOpenAISB       = 5
-	ChannelTypeOpenAIMax      = 6
-	ChannelTypeOhMyGPT        = 7
-	ChannelTypeCustom         = 8
-	ChannelTypeAILS           = 9
-	ChannelTypeAIProxy        = 10
-	ChannelTypePaLM           = 11
-	ChannelTypeAPI2GPT        = 12
-	ChannelTypeAIGC2D         = 13
-	ChannelTypeAnthropic      = 14
-	ChannelTypeBaidu          = 15
-	ChannelTypeZhipu          = 16
-	ChannelTypeAli            = 17
-	ChannelTypeXunfei         = 18
-	ChannelType360            = 19
-	ChannelTypeOpenRouter     = 20
-	ChannelTypeAIProxyLibrary = 21
-	ChannelTypeFastGPT        = 22
-	ChannelTypeTencent        = 23
-	ChannelTypeAzureSpeech    = 24
-	ChannelTypeGemini         = 25
-	ChannelTypeBaichuan       = 26
-	ChannelTypeMiniMax        = 27
-	ChannelTypeDeepseek       = 28
-	ChannelTypeMoonshot       = 29
-	ChannelTypeMistral        = 30
-	ChannelTypeGroq           = 31
-	ChannelTypeBedrock        = 32
-	ChannelTypeLingyi         = 33
-	ChannelTypeMidjourney     = 34
-	ChannelTypeCloudflareAI   = 35
-	ChannelTypeCohere         = 36
-	ChannelTypeStabilityAI    = 37
-	ChannelTypeCoze           = 38
-	ChannelTypeOllama         = 39
-	ChannelTypeHunyuan        = 40
+	SourceChannelTypeUnknown         = 0
+	SourceChannelTypeOpenAI          = 1
+	SourceChannelTypeAzure           = 3
+	SourceChannelTypeCustom          = 8
+	SourceChannelTypePaLM            = 11
+	SourceChannelTypeAnthropic       = 14
+	SourceChannelTypeBaidu           = 15
+	SourceChannelTypeZhipu           = 16
+	SourceChannelTypeAli             = 17
+	SourceChannelTypeXunfei          = 18
+	SourceChannelType360             = 19
+	SourceChannelTypeOpenRouter      = 20
+	SourceChannelTypeTencent         = 23
+	SourceChannelTypeAzureSpeech     = 24
+	SourceChannelTypeGemini          = 25
+	SourceChannelTypeBaichuan        = 26
+	SourceChannelTypeMiniMax         = 27
+	SourceChannelTypeDeepseek        = 28
+	SourceChannelTypeMoonshot        = 29
+	SourceChannelTypeMistral         = 30
+	SourceChannelTypeGroq            = 31
+	SourceChannelTypeBedrock         = 32
+	SourceChannelTypeLingyi          = 33
+	SourceChannelTypeMidjourney      = 34
+	SourceChannelTypeCloudflareAI    = 35
+	SourceChannelTypeCohere          = 36
+	SourceChannelTypeStabilityAI     = 37
+	SourceChannelTypeCoze            = 38
+	SourceChannelTypeOllama          = 39
+	SourceChannelTypeHunyuan         = 40
+	SourceChannelTypeSuno            = 41
+	SourceChannelTypeVertexAI        = 42
+	SourceChannelTypeLLAMA           = 43
+	SourceChannelTypeIdeogram        = 44
+	SourceChannelTypeSiliconflow     = 45
+	SourceChannelTypeFlux            = 46
+	SourceChannelTypeJina            = 47
+	SourceChannelTypeRerank          = 48
+	SourceChannelTypeGithub          = 49
+	SourceChannelTypeRecraft         = 51
+	SourceChannelTypeReplicate       = 52
+	SourceChannelTypeKling           = 53
+	SourceChannelTypeAzureDatabricks = 54
+	SourceChannelTypeAzureV1         = 55
+	SourceChannelTypeXAI             = 56
 )
 
-// 旧通道类别
+// songquanpeng/one-api (Target) Channel Types
 const (
-	Unknown = iota
-	OpenAI
-	API2D
-	Azure
-	CloseAI
-	OpenAISB
-	OpenAIMax
-	OhMyGPT
-	Custom
-	Ails
-	AIProxy
-	PaLM
-	API2GPT
-	AIGC2D
-	Anthropic
-	Baidu
-	Zhipu
-	Ali
-	Xunfei
-	AI360
-	OpenRouter
-	AIProxyLibrary
-	FastGPT
-	Tencent
-	Gemini
-	Moonshot
-	Baichuan
-	Minimax
-	Mistral
-	Groq
-	Ollama
-	LingYiWanWu
-	StepFun
-	AwsClaude
-	Coze
-	Cohere
-	DeepSeek
-	Cloudflare
-	DeepL
-	TogetherAI
-	Doubao
-	Dummy
+	TargetChannelTypeUnknown               = 0
+	TargetChannelTypeOpenAI                = 1
+	TargetChannelTypeAPI2D                 = 2
+	TargetChannelTypeAzure                 = 3
+	TargetChannelTypeCloseAI               = 4
+	TargetChannelTypeOpenAISB              = 5
+	TargetChannelTypeOpenAIMax             = 6
+	TargetChannelTypeOhMyGPT               = 7
+	TargetChannelTypeCustom                = 8
+	TargetChannelTypeAils                  = 9
+	TargetChannelTypeAIProxy               = 10
+	TargetChannelTypePaLM                  = 11
+	TargetChannelTypeAPI2GPT               = 12
+	TargetChannelTypeAIGC2D                = 13
+	TargetChannelTypeAnthropic             = 14
+	TargetChannelTypeBaidu                 = 15
+	TargetChannelTypeZhipu                 = 16
+	TargetChannelTypeAli                   = 17
+	TargetChannelTypeXunfei                = 18
+	TargetChannelTypeAI360                 = 19
+	TargetChannelTypeOpenRouter            = 20
+	TargetChannelTypeAIProxyLibrary        = 21
+	TargetChannelTypeFastGPT               = 22
+	TargetChannelTypeTencent               = 23
+	TargetChannelTypeGemini                = 24
+	TargetChannelTypeMoonshot              = 25
+	TargetChannelTypeBaichuan              = 26
+	TargetChannelTypeMinimax               = 27
+	TargetChannelTypeMistral               = 28
+	TargetChannelTypeGroq                  = 29
+	TargetChannelTypeOllama                = 30
+	TargetChannelTypeLingYiWanWu           = 31
+	TargetChannelTypeStepFun               = 32
+	TargetChannelTypeAwsClaude             = 33
+	TargetChannelTypeCoze                  = 34
+	TargetChannelTypeCohere                = 35
+	TargetChannelTypeDeepSeek              = 36
+	TargetChannelTypeCloudflare            = 37
+	TargetChannelTypeDeepL                 = 38
+	TargetChannelTypeTogetherAI            = 39
+	TargetChannelTypeDoubao                = 40
+	TargetChannelTypeNovita                = 41
+	TargetChannelTypeVertextAI             = 42
+	TargetChannelTypeProxy                 = 43
+	TargetChannelTypeSiliconFlow           = 44
+	TargetChannelTypeXAI                   = 45
+	TargetChannelTypeReplicate             = 46
+	TargetChannelTypeBaiduV2               = 47
+	TargetChannelTypeXunfeiV2              = 48
+	TargetChannelTypeAliBailian            = 49
+	TargetChannelTypeOpenAICompatible      = 50
+	TargetChannelTypeGeminiOpenAICompatible = 51
+	TargetChannelTypeDummy                 = 52
 )
 
-// 旧通道类别映射新通道类别假定映射
-var channelOldToNew = map[int]int{
-	Unknown:        ChannelTypeUnknown,
-	OpenAI:         ChannelTypeOpenAI,
-	API2D:          ChannelTypeAPI2D,
-	Azure:          ChannelTypeAzure,
-	CloseAI:        ChannelTypeCloseAI,
-	OpenAISB:       ChannelTypeOpenAISB,
-	OpenAIMax:      ChannelTypeOpenAIMax,
-	OhMyGPT:        ChannelTypeOhMyGPT,
-	Custom:         ChannelTypeCustom,
-	Ails:           ChannelTypeAILS,
-	AIProxy:        ChannelTypeAIProxy,
-	PaLM:           ChannelTypePaLM,
-	API2GPT:        ChannelTypeAPI2GPT,
-	AIGC2D:         ChannelTypeAIGC2D,
-	Anthropic:      ChannelTypeAnthropic,
-	Baidu:          ChannelTypeBaidu,
-	Zhipu:          ChannelTypeZhipu,
-	Ali:            ChannelTypeAli,
-	Xunfei:         ChannelTypeXunfei,
-	AI360:          ChannelType360,
-	OpenRouter:     ChannelTypeOpenRouter,
-	AIProxyLibrary: ChannelTypeAIProxyLibrary,
-	FastGPT:        ChannelTypeFastGPT,
-	Tencent:        ChannelTypeTencent,
-	Gemini:         ChannelTypeGemini,
-	Moonshot:       ChannelTypeMoonshot,
-	Baichuan:       ChannelTypeBaichuan,
-	Minimax:        ChannelTypeMiniMax,
-	Mistral:        ChannelTypeMistral,
-	Groq:           ChannelTypeGroq,
-	Ollama:         ChannelTypeOllama,
-	LingYiWanWu:    ChannelTypeLingyi,
-	//StepFun:        ChannelTypeUnknown,
-	//AwsClaude:  ChannelTypeCloudflareAI,
-	Coze:       ChannelTypeCoze,
-	Cohere:     ChannelTypeCohere,
-	DeepSeek:   ChannelTypeDeepseek,
-	Cloudflare: ChannelTypeCloudflareAI,
-	//DeepL:      ChannelTypeUnknown,
-	//TogetherAI: ChannelTypeUnknown,
-	//Doubao:     ChannelTypeUnknown,
-	//Dummy:      ChannelTypeUnknown,
+// Mapping from MartialBE/one-hub (Source) to songquanpeng/one-api (Target)
+var channelMap = map[int]int{
+	SourceChannelTypeOpenAI:       TargetChannelTypeOpenAI,
+	SourceChannelTypeAzure:        TargetChannelTypeAzure,
+	SourceChannelTypeCustom:       TargetChannelTypeCustom,
+	SourceChannelTypePaLM:         TargetChannelTypePaLM,
+	SourceChannelTypeAnthropic:    TargetChannelTypeAnthropic,
+	SourceChannelTypeBaidu:        TargetChannelTypeBaidu,
+	SourceChannelTypeZhipu:        TargetChannelTypeZhipu,
+	SourceChannelTypeAli:          TargetChannelTypeAli,
+	SourceChannelTypeXunfei:       TargetChannelTypeXunfei,
+	SourceChannelType360:          TargetChannelTypeAI360,
+	SourceChannelTypeOpenRouter:   TargetChannelTypeOpenRouter,
+	SourceChannelTypeTencent:      TargetChannelTypeTencent,
+	SourceChannelTypeGemini:       TargetChannelTypeGemini,
+	SourceChannelTypeBaichuan:     TargetChannelTypeBaichuan,
+	SourceChannelTypeMiniMax:      TargetChannelTypeMinimax,
+	SourceChannelTypeDeepseek:     TargetChannelTypeDeepSeek,
+	SourceChannelTypeMoonshot:     TargetChannelTypeMoonshot,
+	SourceChannelTypeMistral:      TargetChannelTypeMistral,
+	SourceChannelTypeGroq:         TargetChannelTypeGroq,
+	SourceChannelTypeOllama:       TargetChannelTypeOllama,
+	SourceChannelTypeLingyi:       TargetChannelTypeLingYiWanWu,
+	SourceChannelTypeCoze:         TargetChannelTypeCoze,
+	SourceChannelTypeCohere:       TargetChannelTypeCohere,
+	SourceChannelTypeCloudflareAI: TargetChannelTypeCloudflare,
+	SourceChannelTypeVertexAI:     TargetChannelTypeVertextAI,
+	SourceChannelTypeSiliconflow:  TargetChannelTypeSiliconFlow,
+	SourceChannelTypeXAI:          TargetChannelTypeXAI,
+	SourceChannelTypeReplicate:    TargetChannelTypeReplicate,
 }
 
-// 旧渠道类别数据映射到新数据枚举类比
+// upgradeChannelType converts the channel type from Source (MartialBE) to Target (songquanpeng)
 func upgradeChannelType(oldValue interface{}) interface{} {
 	var oldVal int
 	switch v := oldValue.(type) {
@@ -152,19 +153,19 @@ func upgradeChannelType(oldValue interface{}) interface{} {
 		valStr := string(v)
 		valInt, err := strconv.Atoi(valStr)
 		if err != nil {
-			fmt.Printf("渠道Type旧值: %s (解析错误), 新值: %d (未知类型)\n", valStr, ChannelTypeUnknown)
-			return ChannelTypeUnknown
+			fmt.Printf("渠道Type旧值: %s (解析错误), 新值: %d (未知类型)\n", valStr, TargetChannelTypeUnknown)
+			return TargetChannelTypeUnknown
 		}
 		oldVal = valInt
 	default:
-		fmt.Printf("渠道Type旧值: 非整数或字节数组, 新值: %d (未知类型)\n", ChannelTypeUnknown)
-		return ChannelTypeUnknown
+		fmt.Printf("渠道Type旧值: 非整数或字节数组, 新值: %d (未知类型)\n", TargetChannelTypeUnknown)
+		return TargetChannelTypeUnknown
 	}
 
-	if newVal, found := channelOldToNew[oldVal]; found {
+	if newVal, found := channelMap[oldVal]; found {
 		fmt.Printf("渠道Type旧值: %d, 新值: %d\n", oldVal, newVal)
 		return newVal
 	}
-	fmt.Printf("渠道Type旧值: %d, 新值未找到, 返回默认值: %d (未知类型)\n", oldVal, ChannelTypeUnknown)
-	return ChannelTypeUnknown
+	fmt.Printf("渠道Type旧值: %d, 新值未找到, 返回默认值: %d (未知类型)\n", oldVal, TargetChannelTypeUnknown)
+	return TargetChannelTypeUnknown
 }
