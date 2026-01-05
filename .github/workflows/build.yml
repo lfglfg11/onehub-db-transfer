@@ -3,7 +3,7 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*.*.*'  # 推荐加上 'v' 前缀，如 v0.1.0
+      - 'v*.*.*'  # 例如 v0.1.0, v1.0.0
   workflow_dispatch:
 
 jobs:
@@ -27,10 +27,10 @@ jobs:
             EXT: ""
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: '1.21'
 
@@ -40,7 +40,7 @@ jobs:
           GOOS=${{ matrix.GOOS }} GOARCH=${{ matrix.GOARCH }} go build -o build/db-transfer${{ matrix.EXT }} .
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: db-transfer-${{ matrix.GOOS }}-${{ matrix.GOARCH }}
           path: build/db-transfer${{ matrix.EXT }}
@@ -50,16 +50,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: ./dist
 
       - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -71,40 +70,52 @@ jobs:
             Changes: ${{ github.event.head_commit.message }}
 
   build-and-push-image:
+    needs: release-binaries  # 可选：也可改为独立运行
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Extract tag name
         id: get_tag
         run: |
           TAG=${GITHUB_REF#refs/tags/}
-          echo "TAG_NAME=${TAG}" >> "$GITHUB_ENV"
+          echo "TAG=${TAG}" >> "$GITHUB_ENV"
 
+      # === 登录 GHCR（关键修复：明确用户名）===
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: lfglfg11  # 👈 修复点：避免 "organization package" 错误
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # === 登录 Docker Hub ===
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build and push image
-        uses: docker/build-push-action@v4
+      # === 构建并推送到 GHCR ===
+      - name: Build and push to GHCR
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: |
-            ghcr.io/lfglfg11/onehub-db-transfer:${{ env.TAG_NAME }}
+            ghcr.io/lfglfg11/onehub-db-transfer:${{ env.TAG }}
             ghcr.io/lfglfg11/onehub-db-transfer:latest
-            lfglfg11/onehub-db-transfer:${{ env.TAG_NAME }}
+
+      # === 构建并推送到 Docker Hub ===
+      - name: Build and push to Docker Hub
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            lfglfg11/onehub-db-transfer:${{ env.TAG }}
             lfglfg11/onehub-db-transfer:latest
