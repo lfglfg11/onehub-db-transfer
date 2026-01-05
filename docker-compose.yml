@@ -2,11 +2,18 @@ version: '3.8'
 
 services:
   dbtransfer:
+    # 默认从 GitHub Container Registry (GHCR) 拉取镜像（推荐）
     image: ghcr.io/lfglfg11/onehub-db-transfer:latest
+    # 备用：从 Docker Hub 拉取（取消注释即可切换）
+    # image: lfglfg11/onehub-db-transfer:latest
+
+    # 确保每次启动都拉取最新镜像（避免缓存旧版本）
+    pull_policy: always
+
     environment:
-      # MartialBE/one-hub数据库连接(源)
+      # MartialBE/one-hub 数据库连接（源）
       ONEAPI_SOURCE_SQL_DSN: "mysql://user:password@tcp(oldhost:3306)/olddb"
-      # songquanpeng/one-api数据库连接(目标)
+      # songquanpeng/one-api 数据库连接（目标）
       ONEAPI_TARGET_SQL_DSN: "mysql://user:password@tcp(newhost:3306)/newdb"
       # 迁移后是否从目标库 channels 重建 abilities（默认 true）
       ONEAPI_REBUILD_ABILITIES: "true"

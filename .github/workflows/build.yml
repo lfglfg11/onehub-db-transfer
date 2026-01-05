@@ -3,11 +3,11 @@ name: Build and Release
 on:
   push:
     tags:
-      - '*.*.*'
+      - 'v*.*.*'  # 推荐加上 'v' 前缀，如 v0.1.0
   workflow_dispatch:
 
 jobs:
-  build:
+  build-binaries:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -27,133 +27,84 @@ jobs:
             EXT: ""
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: '1.21'
 
-      - name: Build the binary
+      - name: Build binary
         run: |
           mkdir -p build
           GOOS=${{ matrix.GOOS }} GOARCH=${{ matrix.GOARCH }} go build -o build/db-transfer${{ matrix.EXT }} .
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: db-transfer-${{ matrix.GOOS }}-${{ matrix.GOARCH }}
           path: build/db-transfer${{ matrix.EXT }}
 
-  release:
-    needs: build
+  release-binaries:
+    needs: build-binaries
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
         with:
-          name: db-transfer-linux-amd64
-          path: ./dist/linux
-      - uses: actions/download-artifact@v2
-        with:
-          name: db-transfer-windows-amd64
-          path: ./dist/windows
-      - uses: actions/download-artifact@v2
-        with:
-          name: db-transfer-darwin-amd64
-          path: ./dist/macos
+          path: ./dist
 
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
+          tag_name: ${{ github.ref_name }}
+          files: |
+            ./dist/**/db-transfer*
           body: |
-            This release includes the following changes:
-            ${{ github.event.head_commit.message }}
+            Release built from ${{ github.sha }}
+            Changes: ${{ github.event.head_commit.message }}
 
-      - name: Upload Linux Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/linux/db-transfer
-          asset_name: db-transfer-linux-amd64
-          asset_content_type: application/octet-stream
-
-      - name: Upload Windows Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/windows/db-transfer.exe
-          asset_name: db-transfer-windows-amd64.exe
-          asset_content_type: application/octet-stream
-
-      - name: Upload macOS Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/macos/db-transfer
-          asset_name: db-transfer-darwin-amd64
-          asset_content_type: application/octet-stream
-
-  docker:
-    needs: release
+  build-and-push-image:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Extract tag name
-        id: extract_tag
-        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        id: get_tag
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "TAG_NAME=${TAG}" >> "$GITHUB_ENV"
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ vars.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}
-
-      - name: Log in to GHCR
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker image
-        run: |
-          repo_name_docker_hub=$(echo "${{ vars.DOCKER_HUB_REPO }}" | tr '[:upper:]' '[:lower:]')
-          repo_name_ghcr=$(echo "${{ github.actor }}/${{ vars.DOCKER_HUB_REPO }}" | tr '[:upper:]' '[:lower:]')
-          tag_name=$(echo "${{ env.TAG_NAME }}" | tr '[:upper:]' '[:lower:]')
-          docker build -t docker.io/${{ vars.DOCKER_HUB_USERNAME }}/$repo_name_docker_hub:$tag_name .
-          docker tag docker.io/${{ vars.DOCKER_HUB_USERNAME }}/$repo_name_docker_hub:$tag_name docker.io/${{ vars.DOCKER_HUB_USERNAME }}/$repo_name_docker_hub:latest
-          docker tag docker.io/${{ vars.DOCKER_HUB_USERNAME }}/$repo_name_docker_hub:$tag_name ghcr.io/$repo_name_ghcr:$tag_name
-          docker tag docker.io/${{ vars.DOCKER_HUB_USERNAME }}/$repo_name_docker_hub:$tag_name ghcr.io/$repo_name_ghcr:latest
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ vars.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      - name: Push to Docker Hub
-        run: |
-          repo_name_docker_hub=$(echo "${{ vars.DOCKER_HUB_REPO }}" | tr '[:upper:]' '[:lower:]')
-          tag_name=$(echo "${{ env.TAG_NAME }}" | tr '[:upper:]' '[:lower:]')
-          docker push docker.io/${{ vars.DOCKER_HUB_USERNAME }}/$repo_name_docker_hub:$tag_name
-          docker push docker.io/${{ vars.DOCKER_HUB_USERNAME }}/$repo_name_docker_hub:latest
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-      - name: Push to GitHub Container Registry
-        run: |
-          repo_name_ghcr=$(echo "${{ github.actor }}/${{ vars.DOCKER_HUB_REPO }}" | tr '[:upper:]' '[:lower:]')
-          tag_name=$(echo "${{ env.TAG_NAME }}" | tr '[:upper:]' '[:lower:]')
-          docker push ghcr.io/$repo_name_ghcr:$tag_name
-          docker push ghcr.io/$repo_name_ghcr:latest
+      - name: Build and push image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/lfglfg11/onehub-db-transfer:${{ env.TAG_NAME }}
+            ghcr.io/lfglfg11/onehub-db-transfer:latest
+            lfglfg11/onehub-db-transfer:${{ env.TAG_NAME }}
+            lfglfg11/onehub-db-transfer:latest
