@@ -3,28 +3,27 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*.*.*'  # 例如 v0.1.0、v1.2.3
+      - 'v*.*.*'  # 例如 v0.1.0、v1.0.0
   workflow_dispatch:
 
 jobs:
   build-binaries:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
         include:
           - os: ubuntu-latest
             GOOS: linux
             GOARCH: amd64
-            EXT: ""
+            FILENAME: db-transfer-linux-amd64
           - os: windows-latest
             GOOS: windows
             GOARCH: amd64
-            EXT: ".exe"
+            FILENAME: db-transfer-windows-amd64.exe
           - os: macos-latest
             GOOS: darwin
             GOARCH: amd64
-            EXT: ""
+            FILENAME: db-transfer-darwin-amd64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,35 +36,36 @@ jobs:
       - name: Build binary
         run: |
           mkdir -p build
-          GOOS=${{ matrix.GOOS }} GOARCH=${{ matrix.GOARCH }} go build -o build/db-transfer${{ matrix.EXT }} .
+          GOOS=${{ matrix.GOOS }} GOARCH=${{ matrix.GOARCH }} go build -o build/${{ matrix.FILENAME }} .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: db-transfer-${{ matrix.GOOS }}-${{ matrix.GOARCH }}
-          path: build/db-transfer${{ matrix.EXT }}
+          name: ${{ matrix.FILENAME }}
+          path: build/${{ matrix.FILENAME }}
 
   release-binaries:
     needs: build-binaries
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: ./dist
 
+      - name: Flatten artifact structure
+        run: |
+          mkdir -p ./release
+          find ./dist -type f -exec mv {} ./release/ \;
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         env:
-          # 使用自定义 PAT，避免 403 错误
+          # 使用具有足够权限的 Personal Access Token
           GITHUB_TOKEN: ${{ secrets.GH_RELEASE_TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}
-          files: |
-            ./dist/**/db-transfer*
+          files: ./release/*
           body: |
             Release built from ${{ github.sha }}
             Changes: ${{ github.event.head_commit.message }}
@@ -88,7 +88,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: lfglfg11  # 👈 修复 "installation not allowed to Create organization package"
+          username: lfglfg11  # 👈 避免 "organization package" 错误
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # === 登录 Docker Hub ===
