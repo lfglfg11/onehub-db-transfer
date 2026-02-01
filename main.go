@@ -23,6 +23,8 @@ type Config struct {
 
 var config Config
 
+var defaultTables = []string{"channels", "logs", "options", "redemptions", "tokens", "users", "abilities"}
+
 func main() {
 	if len(os.Args) > 2 {
 
@@ -38,7 +40,16 @@ func main() {
 	oldDB := openDatabase(config.OldDSN)
 	newDB := openDatabase(config.NewDSN)
 
-	tables := []string{"channels", "logs", "options", "redemptions", "tokens", "users", "abilities"}
+	tables := defaultTables
+	selectedTables, specified := filterTablesByEnv(defaultTables)
+	if specified {
+		if len(selectedTables) == 0 {
+			fmt.Println("⚠️ ONEAPI_MIGRATE_TABLES 未匹配任何可迁移表，已退出")
+			return
+		}
+		tables = selectedTables
+		fmt.Printf("✅ 已启用表级过滤：%s\n", strings.Join(tables, ","))
+	}
 	fmt.Println("🚩数据处理开始🚩")
 	fmt.Println("======================")
 	for _, table := range tables {
@@ -48,6 +59,12 @@ func main() {
 	}
 
 	if boolEnvDefaultTrue("ONEAPI_REBUILD_ABILITIES") {
+		if specified && !contains(tables, "abilities") {
+			fmt.Println("ℹ️ 已指定迁移表且未包含 abilities，跳过重建")
+			fmt.Println("======================")
+			fmt.Println("🚩数据处理完成🚩")
+			return
+		}
 		fmt.Println("======================")
 		fmt.Println("🔧 正在尝试重建目标库 abilities（从目标库 channels 派生）")
 		rebuildTargetAbilitiesFromChannels(newDB)
@@ -71,6 +88,57 @@ func boolEnvDefaultTrue(name string) bool {
 	default:
 		return true
 	}
+}
+
+func filterTablesByEnv(allTables []string) ([]string, bool) {
+	val, ok := os.LookupEnv("ONEAPI_MIGRATE_TABLES")
+	if !ok {
+		return nil, false
+	}
+	val = strings.TrimSpace(val)
+	if val == "" {
+		return nil, false
+	}
+	if strings.EqualFold(val, "all") {
+		return allTables, true
+	}
+
+	parts := strings.FieldsFunc(val, func(r rune) bool {
+		switch r {
+		case ',', ';', ' ', '\t', '\n', '\r':
+			return true
+		default:
+			return false
+		}
+	})
+
+	requested := make(map[string]struct{}, len(parts))
+	for _, p := range parts {
+		p = strings.ToLower(strings.TrimSpace(p))
+		if p == "" {
+			continue
+		}
+		requested[p] = struct{}{}
+	}
+
+	selected := make([]string, 0, len(allTables))
+	for _, t := range allTables {
+		if _, ok := requested[t]; ok {
+			selected = append(selected, t)
+		}
+	}
+
+	unknown := make([]string, 0)
+	for t := range requested {
+		if !contains(allTables, t) {
+			unknown = append(unknown, t)
+		}
+	}
+	if len(unknown) > 0 {
+		fmt.Printf("⚠️ ONEAPI_MIGRATE_TABLES 包含未知表名（已忽略）：%s\n", strings.Join(unknown, ","))
+	}
+
+	return selected, true
 }
 
 func rebuildTargetAbilitiesFromChannels(newDB *sql.DB) {

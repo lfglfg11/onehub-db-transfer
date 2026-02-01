@@ -19,12 +19,14 @@
 - `ONEAPI_SOURCE_SQL_DSN`: MartialBE/one-hub数据库的连接字符串(源)
 - `ONEAPI_TARGET_SQL_DSN`: songquanpeng/one-api数据库的连接字符串(目标)
 - `ONEAPI_REBUILD_ABILITIES`: 是否在迁移结束后重建目标库 `abilities`（默认开启；设置为 `false/0/no/off` 关闭）
+- `ONEAPI_MIGRATE_TABLES`: 指定只迁移哪些表（英文逗号/空格分隔，大小写不敏感）。例如：`users` 或 `users,tokens`；设置为 `all` 表示全量
 
 例如，对于 MySQL 数据库，可以设置以下环境变量：
 
 ```bash
 export ONEAPI_SOURCE_SQL_DSN="mysql://user:password@tcp(oldhost:3306)/olddb"
 export ONEAPI_TARGET_SQL_DSN="mysql://user:password@tcp(newhost:3306)/newdb"
+export ONEAPI_MIGRATE_TABLES="users"
 ```
 例如，对于 PostgreSQL 数据库，可以设置以下环境变量：
 
@@ -75,6 +77,7 @@ services:
       ONEAPI_SOURCE_SQL_DSN: "mysql://user:password@tcp(oldhost:3306)/olddb"
       ONEAPI_TARGET_SQL_DSN: "mysql://user:password@tcp(newhost:3306)/newdb"
       ONEAPI_REBUILD_ABILITIES: "true"
+      ONEAPI_MIGRATE_TABLES: "users"
 ```
 
 #### 启动服务

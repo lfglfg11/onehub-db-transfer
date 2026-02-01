@@ -1,5 +1,9 @@
 # 变更日志
 
+## 2026-02-01
+- 新增表级迁移过滤：支持通过 `ONEAPI_MIGRATE_TABLES` 指定仅迁移部分表（如 `users`）
+- 当指定了迁移表且未包含 `abilities` 时，自动跳过 abilities 重建
+
 ## 2026-01-05
 - 将迁移方向调整为：`MartialBE/one-hub`(源) -> `songquanpeng/one-api`(目标)
 - 更新通道类型映射逻辑：one-hub 的 `ChannelType*` 映射到 one-api 的 `channeltype.*`
